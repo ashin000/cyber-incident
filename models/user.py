@@ -21,6 +21,8 @@ class User(UserMixin):
         self.avatar = user_data.get('avatar')
         self.created_at = user_data.get('created_at')
         self.updated_at = user_data.get('updated_at')
+        self.reset_token = user_data.get('reset_token')
+        self.reset_token_expires = user_data.get('reset_token_expires')
 
     # ── Flask-Login helpers ────────────────────────────────────────
     @property
@@ -66,6 +68,28 @@ class User(UserMixin):
         if row and check_password_hash(row['password_hash'], password):
             return User(row)
         return None
+
+    @staticmethod
+    def set_reset_token(user_id, token, expires_at):
+        """Store a one-time password reset token and expiry timestamp."""
+        execute(
+            "UPDATE users SET reset_token = %s, reset_token_expires = %s WHERE id = %s",
+            (token, expires_at, user_id)
+        )
+
+    @staticmethod
+    def clear_reset_token(user_id):
+        """Invalidate any active reset token for the user."""
+        execute(
+            "UPDATE users SET reset_token = NULL, reset_token_expires = NULL WHERE id = %s",
+            (user_id,)
+        )
+
+    @staticmethod
+    def get_by_reset_token(token):
+        """Return the user associated with a valid reset token, if any."""
+        row = fetch_one("SELECT * FROM users WHERE reset_token = %s", (token,))
+        return User(row) if row else None
 
     @staticmethod
     def update_profile(user_id, full_name, phone, address):

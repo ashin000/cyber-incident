@@ -13,12 +13,13 @@
                 <h5 class="section-title"><i class="bi bi-exclamation-triangle"></i> Incident Information</h5>
 
                 <div class="row g-3">
-                    <div class="col-md-8">
+                    <div class="col-12">
                         <label for="title" class="form-label">Incident Title *</label>
                         <input type="text" class="form-control" id="title" name="title"
                                placeholder="Brief title of the incident" required minlength="5">
+                        <div class="invalid-feedback">Title is required (min 5 characters).</div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label for="incident_type" class="form-label">Incident Type *</label>
                         <select class="form-select" id="incident_type" name="incident_type" required>
                             <option value="">Select type...</option>
@@ -36,16 +37,7 @@
                             <option value="Deepfake & AI Misuse">Deepfake & AI Misuse</option>
                             <option value="Other">Other</option>
                         </select>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label for="category_id" class="form-label">Category</label>
-                        <select class="form-select" id="category_id" name="category_id">
-                            <option value="">Select category...</option>
-                            {% for cat in categories %}
-                            <option value="{{ cat.id }}">{{ cat.name }}</option>
-                            {% endfor %}
-                        </select>
+                        <div class="invalid-feedback">Please select an incident type.</div>
                     </div>
                     <div class="col-md-6">
                         <label for="priority" class="form-label">Priority</label>
@@ -61,11 +53,13 @@
                         <label for="description" class="form-label">Detailed Description *</label>
                         <textarea class="form-control" id="description" name="description"
                                   rows="4" placeholder="Describe the incident in detail..." required minlength="10"></textarea>
+                        <div class="invalid-feedback">Description is required (min 10 characters).</div>
                     </div>
 
                     <div class="col-md-4">
                         <label for="incident_date" class="form-label">Date of Incident *</label>
                         <input type="date" class="form-control" id="incident_date" name="incident_date" required>
+                        <div class="invalid-feedback">Incident date is required.</div>
                     </div>
                     <div class="col-md-4">
                         <label for="incident_time" class="form-label">Time of Incident</label>

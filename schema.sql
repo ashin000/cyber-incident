@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS users (
     email           VARCHAR(255)    NOT NULL UNIQUE,
     phone           VARCHAR(20)     DEFAULT NULL,
     password_hash   VARCHAR(512)    NOT NULL,
+    reset_token     VARCHAR(255)    DEFAULT NULL,
+    reset_token_expires DATETIME     DEFAULT NULL,
     role            VARCHAR(50)     NOT NULL DEFAULT 'citizen', -- 'citizen', 'officer', 'admin'
     address         TEXT            DEFAULT NULL,
     is_active       TINYINT         NOT NULL DEFAULT 1,

@@ -7,6 +7,7 @@ from models.incident import Incident
 from models.evidence import Evidence
 from models.notification import Notification
 from database import fetch_all
+from utils.mailer import send_incident_created_email
 from utils.helpers import (
     paginate, sanitize_input, log_audit,
     get_status_percentage, get_status_color, get_priority_color
@@ -74,6 +75,9 @@ def new_incident():
 
             log_audit(current_user.id, 'INCIDENT_CREATED',
                       f'Case {incident["case_id"]} created')
+
+            # Send email confirmation to registered user
+            send_incident_created_email(incident)
 
             flash(f'Incident reported successfully! Case ID: {incident["case_id"]}', 'success')
             return redirect(url_for('incident.view_incident', incident_id=incident_id))

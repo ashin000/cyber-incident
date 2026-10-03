@@ -54,6 +54,22 @@ def get_connection():
 
 
 
+def ensure_user_reset_columns():
+    """Add password-reset fields for older databases created before the forgot-password feature."""
+    conn = get_connection()
+    try:
+        cols = conn.execute("PRAGMA table_info(users)").fetchall()
+        existing = {col['name'] for col in cols}
+
+        if 'reset_token' not in existing:
+            conn.execute("ALTER TABLE users ADD COLUMN reset_token VARCHAR(255) DEFAULT NULL")
+        if 'reset_token_expires' not in existing:
+            conn.execute("ALTER TABLE users ADD COLUMN reset_token_expires DATETIME DEFAULT NULL")
+        conn.commit()
+    finally:
+        conn.close()
+
+
 def init_db():
     """Initialize the database from schema.sql if the database file does not exist."""
     db_exists = os.path.exists(Config.DATABASE_PATH)
@@ -88,6 +104,7 @@ def init_db():
         except Exception as se:
             print(f"[DB] [WARNING] Could not auto-seed database: {se}")
 
+    ensure_user_reset_columns()
 
 
 def fetch_one(query, params=None):

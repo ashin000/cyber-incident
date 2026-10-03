@@ -3,12 +3,24 @@ Configuration settings for the Cyber Incident Reporting Portal.
 Update MySQL credentials and SECRET_KEY for your environment.
 """
 import os
+from dotenv import load_dotenv
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 
 class Config:
     """Base configuration."""
+
+    # ── Email / SMTP Configuration ─────────────────────────────────────
+    MAIL_SERVER = os.environ.get('MAIL_SERVER', '')
+    MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() in ('true', '1', 'yes')
+    MAIL_USE_SSL = os.environ.get('MAIL_USE_SSL', 'false').lower() in ('true', '1', 'yes')
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME', '')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', '')
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', '')
+    PORTAL_BASE_URL = os.environ.get('PORTAL_BASE_URL', 'http://localhost:5000')
 
     # ── Secret Key (CHANGE IN PRODUCTION) ──────────────────────────────
     SECRET_KEY = os.environ.get('SECRET_KEY', 'cyber-incident-portal-secret-key-change-me')

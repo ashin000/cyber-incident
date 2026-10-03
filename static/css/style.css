@@ -1259,3 +1259,38 @@ textarea.form-control {
     background: var(--bg-secondary);
     color: var(--text-primary);
 }
+
+/* ────────────────────────────────────────────────────────────
+   FORM VALIDATION FEEDBACK (Bootstrap .was-validated compat)
+   ──────────────────────────────────────────────────────────── */
+.was-validated .form-control:invalid,
+.was-validated .form-select:invalid {
+    border-color: var(--danger) !important;
+    box-shadow: 0 0 0 2px rgba(255, 82, 82, 0.25);
+}
+
+.was-validated .form-control:valid,
+.was-validated .form-select:valid {
+    border-color: var(--success) !important;
+    box-shadow: 0 0 0 2px rgba(0, 230, 118, 0.15);
+}
+
+.was-validated .form-control:invalid:focus,
+.was-validated .form-select:invalid:focus {
+    box-shadow: 0 0 0 3px rgba(255, 82, 82, 0.35);
+}
+
+.was-validated .form-control:valid:focus,
+.was-validated .form-select:valid:focus {
+    box-shadow: 0 0 0 3px rgba(0, 230, 118, 0.25);
+}
+
+/* Show native validation messages below invalid fields */
+.was-validated .form-control:invalid ~ .invalid-feedback,
+.was-validated .form-select:invalid ~ .invalid-feedback {
+    display: block;
+    color: var(--danger);
+    font-size: 0.8rem;
+    margin-top: 4px;
+}
+
