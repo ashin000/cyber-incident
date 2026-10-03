@@ -6,6 +6,7 @@ from flask_login import login_required, current_user
 from models.incident import Incident
 from models.evidence import Evidence
 from models.notification import Notification
+from utils.mailer import send_status_change_email
 from utils.decorators import officer_required
 from utils.helpers import (
     paginate, sanitize_input, log_audit,
@@ -115,6 +116,7 @@ def update_case_status(incident_id):
         flash('Invalid status.', 'danger')
         return redirect(url_for('incident.view_incident', incident_id=incident_id))
 
+    old_status = incident.get('status', 'Pending')
     Incident.update_status(incident_id, new_status, current_user.id, notes)
 
     if resolution_remarks and new_status in ('Resolved', 'Closed'):
@@ -127,6 +129,16 @@ def update_case_status(incident_id):
         message=f'Your case {incident["case_id"]} has been updated to: {new_status}',
         notif_type='info',
         incident_id=incident_id
+    )
+
+    # Email notification to reporter's registered email
+    status_notes = resolution_remarks if (resolution_remarks and new_status in ('Resolved', 'Closed')) else notes
+    send_status_change_email(
+        incident=incident,
+        new_status=new_status,
+        old_status=old_status,
+        notes=status_notes,
+        changed_by_name=f'Officer {current_user.full_name}'
     )
 
     log_audit(current_user.id, 'STATUS_UPDATED',

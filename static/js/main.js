@@ -196,6 +196,13 @@ function initFormValidation() {
             if (!form.checkValidity()) {
                 e.preventDefault();
                 e.stopPropagation();
+
+                // Scroll to the first invalid field so the user can see what's wrong
+                const firstInvalid = form.querySelector(':invalid');
+                if (firstInvalid) {
+                    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstInvalid.focus();
+                }
             }
             form.classList.add('was-validated');
         });

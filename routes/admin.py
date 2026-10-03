@@ -15,6 +15,7 @@ from database import fetch_all, fetch_one, execute
 from utils.decorators import admin_required
 from utils.helpers import paginate, sanitize_input, log_audit, validate_email, validate_password
 from utils.reports import generate_pdf_report, generate_excel_report
+from utils.mailer import send_status_change_email
 from config import Config
 
 admin_bp = Blueprint('admin', __name__)
@@ -214,6 +215,15 @@ def assign_case(incident_id):
             message=f'Your case {incident["case_id"]} has been assigned to Officer {officer.full_name}.',
             notif_type='info',
             incident_id=incident_id
+        )
+
+        # Email notification to reporter's registered email
+        send_status_change_email(
+            incident=incident,
+            new_status='Assigned',
+            old_status=incident.get('status', 'Pending'),
+            notes=f'Your case has been assigned to Investigating Officer {officer.full_name}.',
+            changed_by_name=f'Administrator ({current_user.full_name})'
         )
 
         log_audit(current_user.id, 'CASE_ASSIGNED',
