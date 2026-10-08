@@ -3,7 +3,7 @@ services:
     name: cyber-incident-portal
     runtime: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:create_app() --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
     plan: free               # upgrade to 'starter' ($7/mo) for persistent disk support
 
     # ── Persistent Disk (keeps SQLite + uploads alive across redeploys) ──
