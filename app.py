@@ -92,7 +92,9 @@ def create_app():
     return app
 
 
-# ── Run ────────────────────────────────────────────────────────
+# ── WSGI app instance (for gunicorn app:app on Render) ─────────────
+app = create_app()
+
+# ── Local dev server ────────────────────────────────────────────────
 if __name__ == '__main__':
-    app = create_app()
     app.run(debug=True, host='0.0.0.0', port=5000)
