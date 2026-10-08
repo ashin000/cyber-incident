@@ -7,17 +7,34 @@ venv/
 # Python cache files
 __pycache__/
 *.pyc
+*.pyo
 
-# Local databases
+# Local databases (never commit SQLite files)
 *.db
+*.sqlite3
 
-# Large media or documents (avoid pushing 40MB+ PDF to repo)
-Report model.pdf
-
-# IDEs/Environments
+# Environment secrets (never commit real .env)
 .env
+
+# User uploaded files
+uploads/
+
+# Generated reports
+reports/
+
+# Large media or documents
+Report model.pdf
+*.pdf
+
+# IDEs / editors
 .vscode/
 .idea/
+*.swp
+*.swo
 
-# User uploads
-uploads/
+# OS files
+.DS_Store
+Thumbs.db
+
+# Pytest cache
+.pytest_cache/

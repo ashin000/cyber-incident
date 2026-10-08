@@ -111,6 +111,7 @@ def update_case_status(incident_id):
     new_status = request.form.get('new_status', '')
     notes = sanitize_input(request.form.get('notes', ''))
     resolution_remarks = sanitize_input(request.form.get('resolution_remarks', ''))
+    incident_type = incident.get('incident_type', 'Cyber Incident')
 
     if new_status not in Incident.STATUS_LIST:
         flash('Invalid status.', 'danger')
@@ -122,11 +123,26 @@ def update_case_status(incident_id):
     if resolution_remarks and new_status in ('Resolved', 'Closed'):
         Incident.set_resolution(incident_id, resolution_remarks)
 
-    # Notify the reporter
+    # Notify the reporter with formatted message
+    status_emojis = {
+        'Pending': '⏳',
+        'Assigned': '👮',
+        'Under Investigation': '🔍',
+        'Resolved': '✅',
+        'Closed': '📁',
+    }
+    status_emoji = status_emojis.get(new_status, 'ℹ️')
+    notif_notes = resolution_remarks if (resolution_remarks and new_status in ('Resolved', 'Closed')) else notes
+    notif_message = f'Your {incident_type} complaint has been {new_status.lower()}.\n\n'
+    notif_message += f'Complaint Status: {new_status} {status_emoji}'
+    if notif_notes:
+        notif_message += f' {notif_notes}'
+    notif_message += f'\n\nThank you for using the Cyber Incident Reporting Portal.'
+
     Notification.create(
         user_id=incident['user_id'],
         title='Case Status Updated',
-        message=f'Your case {incident["case_id"]} has been updated to: {new_status}',
+        message=notif_message,
         notif_type='info',
         incident_id=incident_id
     )

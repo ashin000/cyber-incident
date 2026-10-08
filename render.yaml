@@ -1,0 +1,49 @@
+services:
+  - type: web
+    name: cyber-incident-portal
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:create_app() --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    plan: free               # upgrade to 'starter' ($7/mo) for persistent disk support
+
+    # ── Persistent Disk (keeps SQLite + uploads alive across redeploys) ──
+    disk:
+      name: portal-data
+      mountPath: /opt/render/data
+      sizeGB: 1              # 1 GB = ~$0.25/month
+
+    # ── Environment Variables ─────────────────────────────────────────
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true        # Render auto-generates a secure random value
+
+      - key: DATABASE_PATH
+        value: /opt/render/data/cyber_incident_portal.db
+
+      - key: UPLOAD_FOLDER
+        value: /opt/render/data/uploads
+
+      - key: REPORTS_FOLDER
+        value: /opt/render/data/reports
+
+      - key: PORTAL_BASE_URL
+        value: https://cyber-incident-portal.onrender.com  # ← update after deploy
+
+      - key: PYTHON_VERSION
+        value: "3.11.0"
+
+      # ── Email (fill these in Render dashboard or here) ────────────
+      - key: MAIL_SERVER
+        value: smtp.gmail.com
+      - key: MAIL_PORT
+        value: "587"
+      - key: MAIL_USE_TLS
+        value: "true"
+      - key: MAIL_USE_SSL
+        value: "false"
+      - key: MAIL_USERNAME
+        sync: false          # Set securely in Render Dashboard → Environment
+      - key: MAIL_PASSWORD
+        sync: false          # Set securely in Render Dashboard → Environment
+      - key: MAIL_DEFAULT_SENDER
+        sync: false          # Set securely in Render Dashboard → Environment

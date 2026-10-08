@@ -35,7 +35,7 @@ class Config:
     PERMANENT_SESSION_LIFETIME = 3600  # 1 hour
 
     # ── File Upload Configuration ──────────────────────────────────────
-    UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
+    UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', os.path.join(BASE_DIR, 'uploads'))
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 MB max upload
 
     ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'}
@@ -51,7 +51,7 @@ class Config:
         )
 
     # ── Report Output Directory ────────────────────────────────────────
-    REPORTS_FOLDER = os.path.join(BASE_DIR, 'reports')
+    REPORTS_FOLDER = os.environ.get('REPORTS_FOLDER', os.path.join(BASE_DIR, 'reports'))
 
     # ── Pagination ─────────────────────────────────────────────────────
     ITEMS_PER_PAGE = 10

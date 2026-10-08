@@ -29,7 +29,14 @@ def _send_smtp_worker(to_email, subject, html_content, text_content=None):
     mail_username = Config.MAIL_USERNAME
     mail_password = Config.MAIL_PASSWORD
     mail_port = Config.MAIL_PORT
-    sender = Config.MAIL_DEFAULT_SENDER or mail_username or 'noreply@cyberportal.local'
+    sender = (Config.MAIL_DEFAULT_SENDER or '').strip()
+    sender_lower = sender.lower()
+    if (
+        '@' not in sender
+        or sender_lower.startswith(('your-', 'placeholder', 'change-me'))
+        or sender_lower.endswith(('@example.com', '@example.org', '@example.net'))
+    ):
+        sender = mail_username or 'noreply@cyberportal.local'
 
     if not mail_server or not mail_username:
         print(f"[MAIL NOTICE] SMTP is not configured. Email to <{to_email}> was skipped.")
@@ -182,29 +189,31 @@ def send_status_change_email(incident, new_status, old_status=None, notes=None, 
 
     subject = f"🛡️ [Case {case_id}] Status Updated to: {new_status}"
 
+    # Status emoji mapping
+    status_emojis = {
+        'Pending': '⏳',
+        'Assigned': '👮',
+        'Under Investigation': '🔍',
+        'Resolved': '✅',
+        'Closed': '📁',
+    }
+    status_emoji = status_emojis.get(new_status, 'ℹ️')
+
     # Plain text summary
     text_content = f"""
-Cyber Incident Reporting Portal
-Case Status Update Notification
+Your {incident_type} complaint has been {new_status.lower()}.
 
-Dear {reporter_name},
+Complaint Status: {new_status} {status_emoji}{f' {notes}' if notes else ''}
 
-Your cyber incident report (Case ID: {case_id}) has received a status update.
+Thank you for using the Cyber Incident Reporting Portal.
 
+---
+Case ID: {case_id}
 Incident Title: {title}
-Type: {incident_type}
-Previous Status: {old_status or 'N/A'}
-New Status: {new_status}
 Updated By: {changed_by_name or 'Incident Response Team'}
 Date & Time: {updated_at}
-{f'Remarks / Notes: {notes}' if notes else ''}
 
-You can track your case progress directly on the portal:
-{case_url}
-
-Regards,
-Cyber Incident Response Team
-This is an automated system message. Please do not reply directly to this email.
+Track your case: {case_url}
 """.strip()
 
     # Beautiful Cyber-Themed HTML Email
@@ -241,56 +250,41 @@ This is an automated system message. Please do not reply directly to this email.
                     <tr>
                         <td style="padding: 30px;">
                             <h2 style="margin: 0 0 10px 0; font-size: 20px; color: #ffffff;">Case Status Update</h2>
-                            <p style="margin: 0 0 20px 0; font-size: 14px; color: #94a3b8; line-height: 1.6;">
-                                Hello <strong style="color: #ffffff;">{reporter_name}</strong>, your reported cyber incident status has been updated. Below are the latest investigation details:
+                            <p style="margin: 0 0 20px 0; font-size: 15px; color: #e2e8f0; line-height: 1.7;">
+                                Your <strong style="color: #00e5ff;">{incident_type}</strong> complaint has been <strong style="color: #ffffff;">{new_status.lower()}</strong>.
                             </p>
 
                             <!-- Status Highlight Banner -->
-                            <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 10px; padding: 18px 20px; margin-bottom: 25px;">
-                                <table width="100%" cellspacing="0" cellpadding="0">
-                                    <tr>
-                                        <td>
-                                            <span style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; display: block; margin-bottom: 5px;">Current Status</span>
-                                            <span style="display: inline-block; background-color: {status_meta['bg']}; color: {status_meta['fg']}; font-weight: 700; font-size: 14px; padding: 6px 14px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px;">
-                                                {new_status}
-                                            </span>
-                                            {f'<span style="margin-left: 10px; font-size: 13px; color: #64748b;">(previously: {old_status})</span>' if old_status and old_status != new_status else ''}
-                                        </td>
-                                    </tr>
-                                </table>
+                            <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 10px; padding: 18px 20px; margin-bottom: 20px;">
+                                <p style="margin: 0; font-size: 15px; color: #e2e8f0; line-height: 1.7;">
+                                    <strong>Complaint Status:</strong>
+                                    <span style="display: inline-block; background-color: {status_meta['bg']}; color: {status_meta['fg']}; font-weight: 700; font-size: 13px; padding: 4px 12px; border-radius: 20px; margin: 0 6px;">
+                                        {new_status}
+                                    </span>
+                                    {status_emoji}
+                                    {f'<span style="color: #cbd5e1;"> {notes}</span>' if notes else ''}
+                                </p>
                             </div>
 
-                            <!-- Case Details Table -->
+                            <p style="margin: 0 0 20px 0; font-size: 14px; color: #94a3b8; line-height: 1.6;">
+                                Thank you for using the <strong style="color: #ffffff;">Cyber Incident Reporting Portal</strong>.
+                            </p>
+
+                            <!-- Case Details (compact) -->
                             <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 25px; border-collapse: collapse;">
                                 <tr>
-                                    <td style="padding: 10px 0; border-bottom: 1px solid rgba(148, 163, 184, 0.15); width: 38%; font-size: 13px; color: #94a3b8;">Case ID:</td>
-                                    <td style="padding: 10px 0; border-bottom: 1px solid rgba(148, 163, 184, 0.15); font-size: 14px; font-weight: 600; color: #00e5ff; font-family: monospace;">{case_id}</td>
+                                    <td style="padding: 8px 0; border-bottom: 1px solid rgba(148, 163, 184, 0.15); width: 38%; font-size: 13px; color: #94a3b8;">Case ID:</td>
+                                    <td style="padding: 8px 0; border-bottom: 1px solid rgba(148, 163, 184, 0.15); font-size: 14px; font-weight: 600; color: #00e5ff; font-family: monospace;">{case_id}</td>
                                 </tr>
                                 <tr>
-                                    <td style="padding: 10px 0; border-bottom: 1px solid rgba(148, 163, 184, 0.15); font-size: 13px; color: #94a3b8;">Incident Title:</td>
-                                    <td style="padding: 10px 0; border-bottom: 1px solid rgba(148, 163, 184, 0.15); font-size: 13px; font-weight: 600; color: #ffffff;">{title}</td>
+                                    <td style="padding: 8px 0; border-bottom: 1px solid rgba(148, 163, 184, 0.15); font-size: 13px; color: #94a3b8;">Incident Type:</td>
+                                    <td style="padding: 8px 0; border-bottom: 1px solid rgba(148, 163, 184, 0.15); font-size: 13px; color: #cbd5e1;">{incident_type}</td>
                                 </tr>
                                 <tr>
-                                    <td style="padding: 10px 0; border-bottom: 1px solid rgba(148, 163, 184, 0.15); font-size: 13px; color: #94a3b8;">Incident Type:</td>
-                                    <td style="padding: 10px 0; border-bottom: 1px solid rgba(148, 163, 184, 0.15); font-size: 13px; color: #cbd5e1;">{incident_type}</td>
-                                </tr>
-                                {f'''
-                                <tr>
-                                    <td style="padding: 10px 0; border-bottom: 1px solid rgba(148, 163, 184, 0.15); font-size: 13px; color: #94a3b8;">Updated By:</td>
-                                    <td style="padding: 10px 0; border-bottom: 1px solid rgba(148, 163, 184, 0.15); font-size: 13px; color: #cbd5e1;">{changed_by_name}</td>
-                                </tr>''' if changed_by_name else ''}
-                                <tr>
-                                    <td style="padding: 10px 0; border-bottom: 1px solid rgba(148, 163, 184, 0.15); font-size: 13px; color: #94a3b8;">Updated On:</td>
-                                    <td style="padding: 10px 0; border-bottom: 1px solid rgba(148, 163, 184, 0.15); font-size: 13px; color: #cbd5e1;">{updated_at}</td>
+                                    <td style="padding: 8px 0; border-bottom: 1px solid rgba(148, 163, 184, 0.15); font-size: 13px; color: #94a3b8;">Updated On:</td>
+                                    <td style="padding: 8px 0; border-bottom: 1px solid rgba(148, 163, 184, 0.15); font-size: 13px; color: #cbd5e1;">{updated_at}</td>
                                 </tr>
                             </table>
-
-                            {f'''
-                            <!-- Officer / Resolution Remarks -->
-                            <div style="background: rgba(0, 229, 255, 0.05); border-left: 3px solid #00e5ff; border-radius: 4px; padding: 14px 18px; margin-bottom: 25px;">
-                                <strong style="display: block; font-size: 13px; color: #00e5ff; margin-bottom: 6px;">Notes / Resolution Remarks:</strong>
-                                <span style="font-size: 13px; color: #e2e8f0; line-height: 1.5;">{notes}</span>
-                            </div>''' if notes else ''}
 
                             <!-- CTA Button -->
                             <table width="100%" cellspacing="0" cellpadding="0" style="margin: 30px 0 10px 0;">
@@ -348,25 +342,16 @@ def send_incident_created_email(incident):
     subject = f"🛡️ [Case {case_id}] Incident Report Successfully Registered"
 
     text_content = f"""
-Cyber Incident Reporting Portal
-Incident Acknowledgment
+Your {incident_type} complaint has been registered.
 
-Dear {reporter_name},
-
-Thank you for reporting. Your cyber incident report has been registered in our system.
+Complaint Status: Pending Review ⏳ Our cyber security response officers will review your submission and investigate accordingly.
 
 Case ID: {case_id}
-Title: {title}
-Type: {incident_type}
-Status: Pending Review
 Filed On: {created_at}
 
-Our cyber security response officers will review your submission and investigate accordingly.
-You can monitor live status and case updates at:
-{case_url}
+Track your case: {case_url}
 
-Regards,
-Cyber Incident Response Team
+Thank you for using the Cyber Incident Reporting Portal.
 """.strip()
 
     html_content = f"""
@@ -387,31 +372,30 @@ Cyber Incident Response Team
                     <tr>
                         <td style="padding:30px;">
                             <h2 style="margin:0 0 10px 0;font-size:20px;color:#ffffff;">Report Acknowledged</h2>
-                            <p style="margin:0 0 20px 0;font-size:14px;color:#94a3b8;line-height:1.6;">
-                                Hello <strong style="color:#ffffff;">{reporter_name}</strong>, your incident report has been safely logged in our system. Please preserve your unique Case ID for all future inquiries.
+                            <p style="margin:0 0 20px 0;font-size:15px;color:#e2e8f0;line-height:1.7;">
+                                Your <strong style="color:#00e5ff;">{incident_type}</strong> complaint has been <strong style="color:#ffffff;">registered</strong>.
                             </p>
-                            <div style="background:rgba(0,229,255,0.06);border:1px solid #00e5ff;border-radius:10px;padding:18px 20px;margin-bottom:25px;text-align:center;">
+
+                            <!-- Status Banner -->
+                            <div style="background:rgba(15,23,42,0.8);border:1px solid rgba(148,163,184,0.2);border-radius:10px;padding:18px 20px;margin-bottom:20px;">
+                                <p style="margin:0;font-size:15px;color:#e2e8f0;line-height:1.7;">
+                                    <strong>Complaint Status:</strong>
+                                    <span style="display:inline-block;background-color:#ffab40;color:#000000;font-weight:700;font-size:13px;padding:4px 12px;border-radius:20px;margin:0 6px;">
+                                        Pending Review
+                                    </span>
+                                    ⏳ Our cyber security response officers will review your submission and investigate accordingly.
+                                </p>
+                            </div>
+
+                            <!-- Case ID Highlight -->
+                            <div style="background:rgba(0,229,255,0.06);border:1px solid #00e5ff;border-radius:10px;padding:18px 20px;margin-bottom:20px;text-align:center;">
                                 <span style="font-size:12px;color:#94a3b8;display:block;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Your Unique Case ID</span>
                                 <span style="font-size:22px;font-weight:800;color:#00e5ff;letter-spacing:1px;font-family:monospace;">{case_id}</span>
                             </div>
-                            <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:25px;">
-                                <tr>
-                                    <td style="padding:8px 0;color:#94a3b8;font-size:13px;width:38%;">Title:</td>
-                                    <td style="padding:8px 0;color:#ffffff;font-size:13px;font-weight:600;">{title}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding:8px 0;color:#94a3b8;font-size:13px;">Type:</td>
-                                    <td style="padding:8px 0;color:#cbd5e1;font-size:13px;">{incident_type}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding:8px 0;color:#94a3b8;font-size:13px;">Status:</td>
-                                    <td style="padding:8px 0;color:#ffab40;font-size:13px;font-weight:600;">Pending Review</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding:8px 0;color:#94a3b8;font-size:13px;">Filed At:</td>
-                                    <td style="padding:8px 0;color:#cbd5e1;font-size:13px;">{created_at}</td>
-                                </tr>
-                            </table>
+
+                            <p style="margin:0 0 20px 0;font-size:14px;color:#94a3b8;line-height:1.6;">
+                                Thank you for using the <strong style="color:#ffffff;">Cyber Incident Reporting Portal</strong>.
+                            </p>
                             <table width="100%" cellspacing="0" cellpadding="0" style="margin:25px 0 10px 0;">
                                 <tr>
                                     <td align="center">

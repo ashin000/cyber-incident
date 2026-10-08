@@ -207,12 +207,17 @@ def assign_case(incident_id):
             notif_type='info',
             incident_id=incident_id
         )
-        # Notify reporter
+        # Notify reporter with formatted message
         officer = User.get_by_id(officer_user_id)
+        incident_type = incident.get('incident_type', 'Cyber Incident')
+        reporter_msg = f'Your {incident_type} complaint has been assigned.\n\n'
+        reporter_msg += f'Complaint Status: Assigned 👮 Your case has been assigned to Officer {officer.full_name}.'
+        reporter_msg += f'\n\nThank you for using the Cyber Incident Reporting Portal.'
+
         Notification.create(
             user_id=incident['user_id'],
             title='Case Assigned',
-            message=f'Your case {incident["case_id"]} has been assigned to Officer {officer.full_name}.',
+            message=reporter_msg,
             notif_type='info',
             incident_id=incident_id
         )
